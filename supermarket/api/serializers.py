@@ -9,7 +9,7 @@ from rest_framework import serializers
 #Längen
 #Eigene Geschäftslogik
 
-class CommentSerializer(serializers.Serializer):
+class MarketSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     name = serializers.CharField(max_length=255)
     location = serializers.CharField(max_length=255)
