@@ -10,10 +10,23 @@ from supermarket.models import Market
 #Längen
 #Eigene Geschäftslogik
 
+
+# fehler validierung, außerhalb der Klasse, da flexibler
+def validate_no_x(value):
+        errors = []
+    
+        if 'X' in value:
+            errors.append('no x in location')
+        if 'Y' in value:
+            errors.append('no y in location')
+        if errors:
+            raise serializers.ValidationError(errors)
+        return value
+
 class MarketSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     name = serializers.CharField(max_length=255)
-    location = serializers.CharField(max_length=255)
+    location = serializers.CharField(max_length=255, validators=[validate_no_x])
     description = serializers.CharField()
     net_worth = serializers.DecimalField(max_digits=100, decimal_places=2)
     
@@ -29,7 +42,3 @@ class MarketSerializer(serializers.Serializer):
         instance.save()
         return instance
     
-    def validate_location(self, value):
-        if 'x' in value:
-            raise serializers.ValidationError('no x location')
-        return value
