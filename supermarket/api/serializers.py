@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from supermarket.models import Market
+from supermarket.models import Market, Seller
 
 #Er wandelt Django-Objekte (z. B. Model-Instanzen) in JSON um, 
 #damit sie über eine API ausgeliefert werden können.
@@ -42,3 +42,26 @@ class MarketSerializer(serializers.Serializer):
         instance.save()
         return instance
     
+class SellerDetailSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    name = serializers.CharField(max_length=255)
+    contact_info = serializers.CharField()
+    markets = MarketSerializer(many=True, read_only=True)
+    
+class SellerCreateSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=255)
+    contact_info = serializers.CharField()
+    markets = serializers.ListField(child=serializers.IntegerField(), write_only=True)
+    
+    def validate_markets(self, value):
+        markets = Market.objects.filter(id_in=value)
+        if(markets) != len(value):
+            raise serializers.ValidationError("one or more markets ids not found")
+        return 
+    
+    def create(self, validated_data):
+        market_id = validated_data.pop('markets')
+        seller = Seller.objects.create(**validated_data)
+        markets = Market.objects.filter(id_in=market_id)
+        seller.market.set(markets)
+        return seller
