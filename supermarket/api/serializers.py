@@ -54,14 +54,15 @@ class SellerCreateSerializer(serializers.Serializer):
     markets = serializers.ListField(child=serializers.IntegerField(), write_only=True)
     
     def validate_markets(self, value):
-        markets = Market.objects.filter(id_in=value)
-        if(markets) != len(value):
-            raise serializers.ValidationError("one or more markets ids not found")
-        return 
+        markets = Market.objects.filter(id__in=value)
+        if len(markets) != len(value):
+            serializer = MarketSerializer(markets, many=True)
+            raise serializers.ValidationError(serializer.data)
+        return value
     
     def create(self, validated_data):
-        market_id = validated_data.pop('markets')
+        market_ids = validated_data.pop('markets')
         seller = Seller.objects.create(**validated_data)
-        markets = Market.objects.filter(id_in=market_id)
+        markets = Market.objects.filter(id__in=market_ids)
         seller.markets.set(markets)
         return seller
